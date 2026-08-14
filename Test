@@ -1,1022 +1,597 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Assistant BJT Complete — Club Électronique</title>
+  <meta charset="UTF-8">
+  <title>Simulateur BJT Pro - Analyse Statique et Dynamique</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
 
-<style>
-* { box-sizing: border-box; }
-body { margin: 0; background: #f1f5f9; color: #0f172a; font-family: Arial, sans-serif; font-size: 14px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+    }
 
-header { background: #0f172a; color: white; padding: 16px 24px 0 24px; }
-header h1 { margin: 0 0 4px 0; font-size: 22px; }
-header p { margin: 0 0 12px 0; color: #94a3b8; font-size: 13px; }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
 
-.tabs { display: flex; gap: 4px; }
-.tab-btn {
-  padding: 12px 24px; background: #1e293b; color: #94a3b8; border: none;
-  border-top-left-radius: 8px; border-top-right-radius: 8px; font-weight: bold;
-  cursor: pointer; transition: all 0.2s; font-size: 14px;
-}
-.tab-btn:hover { background: #334155; color: white; }
-.tab-btn.active { background: #f1f5f9; color: #2563eb; border-top: 3px solid #2563eb; }
+    header {
+      margin-bottom: 20px;
+    }
 
-main { max-width: 1280px; margin: 20px auto; padding: 0 16px; }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
+    h1 {
+      font-size: 24px;
+      margin: 0 0 8px 0;
+      color: var(--primary-dark);
+    }
 
-.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.card { background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-.span-1 { grid-column: span 1; }
-.span-2 { grid-column: span 2; }
-.wide { grid-column: 1 / -1; }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
 
-h2 { margin-top: 0; color: #0f172a; font-size: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px; }
-label { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 6px 0; font-size: 13px; }
-input[type="number"] { width: 100px; padding: 5px; border: 1px solid #94a3b8; border-radius: 4px; text-align: right; }
+    .grid-wide {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
 
-.btn-group { display: flex; gap: 8px; margin-top: 8px; }
-button { flex: 1; padding: 10px; border: 0; border-radius: 6px; background: #2563eb; color: white; font-weight: bold; cursor: pointer; }
-button:hover { background: #1d4ed8; }
-button.secondary { background: #475569; }
-button.secondary:hover { background: #334155; }
-button.action-next { background: #059669; font-size: 14px; padding: 12px; }
-button.action-next:hover { background: #047857; }
-button.action-back { background: #d97706; font-size: 14px; padding: 12px; }
-button.action-back:hover { background: #b45309; }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
 
-/* Style du Toggle Switch */
-.switch-container {
-  display: flex; justify-content: space-between; align-items: center;
-  background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px; border-radius: 6px; margin-top: 12px;
-}
-.switch-label { font-weight: bold; color: #1e293b; }
-.switch { position: relative; display: inline-block; width: 48px; height: 24px; }
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider {
-  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #cbd5e1; transition: .3s; border-radius: 24px;
-}
-.slider:before {
-  position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
-  background-color: white; transition: .3s; border-radius: 50%;
-}
-input:checked + .slider { background-color: #2563eb; }
-input:checked + .slider:before { transform: translateX(24px); }
+    .card h2, .card h3 {
+      font-size: 16px;
+      margin-top: 0;
+      margin-bottom: 12px;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
 
-.results { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
-.metric { background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 10px; border-radius: 6px; }
-.metric span { font-size: 10px; color: #64748b; display: block; }
-.metric b { display: block; margin-top: 2px; color: #1e3a8a; font-size: 14px; }
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      margin-bottom: 8px;
+      color: var(--text-muted);
+    }
 
-canvas { display: block; width: 100%; border: 1px solid #cbd5e1; background: #ffffff; border-radius: 6px; }
-#schematicCanvas { height: 280px; }
-#quadrantsCanvas { height: 600px; }
-#acSchematicCanvas { height: 260px; }
-#bodeCanvas { height: 400px; }
+    input[type="number"], input[type="text"] {
+      width: 100px;
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 13px;
+      text-align: right;
+    }
 
-.ok { color: #059669; font-weight: bold; }
-.danger { color: #dc2626; font-weight: bold; }
-.warn { color: #d97706; font-weight: bold; }
-.checkbox-label { justify-content: flex-start; gap: 8px; cursor: pointer; }
-.checkbox-label input { width: auto; }
-.note-box { background: #eff6ff; border-left: 4px solid #2563eb; padding: 10px; margin-bottom: 12px; font-size: 12px; color: #1e40af; }
-.calc-box { background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px; margin-top: 10px; font-size: 12px; color: #14532d; }
-</style>
+    button.btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+
+    button.btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .calc-box {
+      margin-top: 12px;
+      padding: 10px;
+      background: #f0f7ff;
+      border: 1px solid #bae6fd;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #0369a1;
+      line-height: 1.5;
+    }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      background: #ffffff;
+      border-radius: 4px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .metric-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .metric-card .val {
+      font-size: 15px;
+      font-weight: bold;
+      color: var(--primary);
+    }
+
+    .metric-card .lbl {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+  </style>
 </head>
-
 <body>
 
-<header>
-  <h1>Assistant BJT — Spécial Club Débutants</h1>
-  <p>Polarisation Statique (DC), Point Q, Saturation, Blocage & Dimensionnement AC</p>
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('tab-dc')">1. Régime Statique (DC & Point Q)</button>
-    <button class="tab-btn" onclick="switchTab('tab-ac')">2. Régime Dynamique (AC & Amplification)</button>
+<div class="container">
+  <header>
+    <h1>Simulateur BJT Pro - Analyse Statique (DC) et Dynamique (AC)</h1>
+  </header>
+
+  <!-- ENTRIES DE PARAMÈTRES ET ANALYSE STATIQUE DC -->
+  <div class="grid-3">
+    <!-- SECTION 1 : POLARISATION DC -->
+    <section class="card">
+      <h2>1. Paramètres de Polarisation (DC)</h2>
+      <label>Tension VCC (V) <input id="ac_vcc" type="number" value="12" step="0.5" oninput="simAll()"></label>
+      <label>Gain β (hFE) <input id="ac_beta" type="number" value="120" step="1" oninput="simAll()"></label>
+      <label>R1 (kΩ) <input id="ac_r1" type="number" value="4.3" step="0.1" oninput="simAll()"></label>
+      <label>R2 (kΩ) <input id="ac_r2" type="number" value="0.91" step="0.01" oninput="simAll()"></label>
+      <label>RC (kΩ) <input id="ac_rc" type="number" value="0.22" step="0.01" oninput="simAll()"></label>
+      <label>Re1 (non découplée - AC) [Ω] <input id="ac_re1" type="number" value="7" step="1" oninput="simAll()"></label>
+      <label>Re2 (découplée par CE - DC) [Ω] <input id="ac_re2" type="number" value="40" step="1" oninput="simAll()"></label>
+      <label>RL Charge Sortie (kΩ) <input id="ac_rl" type="number" value="10" step="0.1" oninput="simAll()"></label>
+      <label>RS Résistance Gén. (Ω) <input id="ac_rs" type="number" value="50" step="1" oninput="simAll()"></label>
+      <label style="justify-content: flex-start; gap: 8px;">
+        <input id="bypass_ce" type="checkbox" checked onchange="simAll()"> Activer C_E (Découplage)
+      </label>
+    </section>
+
+    <!-- SECTION 2 : CALCULATEUR CONDENSATEURS -->
+    <section class="card">
+      <h2>2. Calculateur de Condensateurs</h2>
+      <label>Fréquence du signal Fs (Hz) 
+        <input id="ac_fsig" type="number" value="5000000" step="100000" oninput="simAll()">
+      </label>
+
+      <div id="calcCondResults" class="calc-box"></div>
+
+      <br>
+      <button type="button" class="btn" onclick="applySuggestedCaps()">Appliquer ces condensateurs ➔</button>
+    </section>
+
+    <!-- SECTION 3 : CONDENSATEURS INSTALLÉS -->
+    <section class="card">
+      <h2>3. Condensateurs Installés (µF)</h2>
+      <label>C1 Liaison Entrée (µF) <input id="ac_c1" type="number" value="10" step="0.1" oninput="simAll()"></label>
+      <label>C2 Liaison Sortie (µF) <input id="ac_c2" type="number" value="10" step="0.1" oninput="simAll()"></label>
+      <label>CE Découplage (µF) <input id="ac_ce" type="number" value="100" step="1" oninput="simAll()"></label>
+      <hr style="border:0; border-top:1px solid var(--border); margin:12px 0;">
+      <label>Cπ / Cbe (pF) <input id="ac_cpi" type="number" value="25" step="1" oninput="simAll()"></label>
+      <label>Cμ / Cbc (pF) <input id="ac_cmu" type="number" value="2.5" step="0.1" oninput="simAll()"></label>
+      <label>VT Température (mV) <input id="ac_vt" type="number" value="26" step="0.5" oninput="simAll()"></label>
+      <br>
+      <button type="button" class="btn" onclick="simAll()">Re-simuler</button>
+    </section>
   </div>
-</header>
 
-<main>
-
-<!-- PAGE 1 : STATIQUE -->
-<div id="tab-dc" class="tab-content active">
-  <div class="grid">
-    <section class="card span-1">
-      <h2>1. Dimensionnement Automatique</h2>
-      <div class="note-box">
-        💡 <b>Hypothèses standards retenues :</b><br>
-        • $V_E = 10\% \times V_{CC}$ (Stabilité)<br>
-        • $V_{CE} = (V_{CC} - V_E) / 2$ (Lois de polarisation)
-      </div>
-      <label>VCC Tension d'alim (V) <input id="dv" type="number" value="12" step="0.1" onchange="designDC()"></label>
-      <label>IC souhaité (mA) <input id="di" type="number" value="25" step="1" onchange="designDC()"></label>
-      <label>VCE sat (V) <input id="dvsat" type="number" value="0.2" step="0.05" onchange="designDC()"></label>
-      <label>PD max Transistor (mW) <input id="dpdmax" type="number" value="300" step="10" onchange="designDC()"></label>
-      <label>Tension Early VA (V) <input id="dva" type="number" value="100" step="10" onchange="designDC()"></label>
-      <label>Gain β (hFE) <input id="db" type="number" value="120" step="5" onchange="designDC()"></label>
-      <label>Ratio VE / VCC <input id="df" type="number" value="0.10" step="0.01" onchange="designDC()"></label>
-      <label>Ratio Ipont / IB <input id="dr" type="number" value="10" step="1" onchange="designDC()"></label>
-      <label>VBE Tension Base (V) <input id="dbe" type="number" value="0.75" step="0.01" onchange="designDC()"></label>
-      <div class="btn-group">
-        <button type="button" onclick="designDC()">Calculer les Résistances</button>
-        <button type="button" class="secondary" onclick="normalizeE24()">Valeurs E24</button>
-      </div>
+  <!-- TABLEAU RÉSUMÉ ANALYSE STATIQUE (DC) -->
+  <div class="grid-wide">
+    <section class="card">
+      <h2>Résultats de l'Analyse Statique (Point de Fonctionnement DC)</h2>
+      <div id="resDC" class="metrics-grid"></div>
     </section>
+  </div>
 
-    <section class="card span-1">
-      <h2>2. Composants du Montage</h2>
-      <label>VCC Alimentation (V) <input id="v" type="number" value="12" step="0.1" onchange="simDC()"></label>
-      <label>R1 (Haut du pont) (Ω) <input id="r1" type="number" value="4385.5" step="100" onchange="simDC()"></label>
-      <label>R2 (Bas du pont) (Ω) <input id="r2" type="number" value="936" step="100" onchange="simDC()"></label>
-      <label>RC (Collecteur) (Ω) <input id="rc" type="number" value="216" step="10" onchange="simDC()"></label>
-      <label>RE (Émetteur) (Ω) <input id="re" type="number" value="47.6" step="10" onchange="simDC()"></label>
-      <label>VCE sat (V) <input id="vsat" type="number" value="0.2" step="0.05" onchange="simDC()"></label>
-      <label>PD max (mW) <input id="pdmax" type="number" value="300" step="10" onchange="simDC()"></label>
-      <label>Tension Early VA (V) <input id="va" type="number" value="100" step="10" onchange="simDC()"></label>
-      <label>Gain β (hFE) <input id="be" type="number" value="150" step="1" onchange="simDC()"></label>
-      <label>VBE (V) <input id="vb" type="number" value="0.70" step="0.01" onchange="simDC()"></label>
-      
-      <!-- NOUVEAU TOGGLE SWITCH EARLY -->
-      <div class="switch-container">
-        <span class="switch-label">Prise en compte Effet Early ($V_A$)</span>
-        <label class="switch">
-          <input id="toggleEarly" type="checkbox" checked onchange="simDC()">
-          <span class="slider"></span>
-        </label>
-      </div>
-    </section>
-
-    <section class="card span-1">
-      <h2>3. Schéma Statique (DC)</h2>
-      <canvas id="schematicCanvas" width="360" height="280"></canvas>
-    </section>
-
-    <section class="card wide">
-      <h2>Mesures au Point de Fonctionnement Q & Modèle Thévenin</h2>
-      <div id="resDC" class="results"></div>
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
-        <p id="stDC" style="margin:0;"></p>
-        <button type="button" class="action-next" style="width:auto;" onclick="transferToAC()">
-          ⚡ Transférer ces réglages vers l'Analyse AC (Page 2) ➔
-        </button>
-      </div>
-    </section>
-
-    <section class="card wide">
+  <!-- GRAPHISME 4 QUADRANTS -->
+  <div class="grid-wide">
+    <section class="card">
       <h2>Graphique à 4 Quadrants (Caractéristique Complète du BJT)</h2>
       <canvas id="quadrantsCanvas" width="1200" height="600"></canvas>
     </section>
   </div>
-</div>
 
-<!-- PAGE 2 : DYNAMIQUE -->
-<div id="tab-ac" class="tab-content">
-  <div class="grid">
-
-    <section class="card wide" style="padding:10px 16px; background:#fef3c7; border-color:#f59e0b;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="color:#92400e; font-weight:bold;">📍 Page 2 : Analyse AC & Aide au Dimensionnement des Condensateurs</span>
-        <button type="button" class="action-back" style="width:auto; padding:8px 16px;" onclick="backToDC()">
-          ❮ Retourner à la Page 1 (Régime DC)
-        </button>
-      </div>
+  <!-- TABLEAU RÉSUMÉ ANALYSE DYNAMIQUE (AC) -->
+  <div class="grid-wide">
+    <section class="card">
+      <h2>Résultats des Calculs AC & Impédances</h2>
+      <div id="resAC" class="metrics-grid"></div>
     </section>
-    
-    <section class="card span-1">
-      <h2>1. Paramètres Injectés de la Page 1</h2>
-      <label>IC de polarisation (mA) <input id="ac_ic" type="number" value="2.0" step="0.1"></label>
-      <label>VCE de polarisation (V) <input id="ac_vce" type="number" value="6.0" step="0.1"></label>
-      <label>Gain β (hFE) <input id="ac_beta" type="number" value="150" step="5"></label>
-      <label>R1 (kΩ) <input id="ac_r1" type="number" value="39" step="0.1"></label>
-      <label>R2 (kΩ) <input id="ac_r2" type="number" value="10" step="0.1"></label>
-      <label>RC (kΩ) <input id="ac_rc" type="number" value="2.4" step="0.1"></label>
-<label>Re1 (non découplée - AC) [Ω] :</label>
-<input type="number" id="ac_re1" value="7" oninput="simAC()">
-<label>Re2 (découplée par CE - DC) [Ω] :</label>
-<input type="number" id="ac_re2" value="40" oninput="simAC()">
-      <label>RL Charge Sortie (kΩ) <input id="ac_rl" type="number" value="10" step="0.5"></label>
-      <label>RS Résistance Gen. (Ω) <input id="ac_rs" type="number" value="50" step="10"></label>
-      <hr style="border:0; border-top:1px solid #e2e8f0; margin:8px 0;">
-      <label class="checkbox-label">
-        <input id="bypass_ce" type="checkbox" checked onchange="simAC()"> Activer $C_E$ (Découplage Émetteur)
-      </label>
-    </section>
-
-<!-- SECTION 2 CORRIGÉE -->
-    <section class="card span-1">
-      <h2>2. Calculateur de Condensateurs</h2>
-      <label>Fréquence du signal Fs (Hz) 
-        <input id="ac_fsig" type="number" value="10000000" step="100000" oninput="simAC()" onchange="simAC()">
-      </label>
-      
-      <!-- Zone d'affichage des résultats du calcul -->
-      <div id="calcCondResults" class="calc-box"></div>
-      
-      <button type="button" style="margin-top:8px;" onclick="applySuggestedCaps()">Appliquer ces condensateurs ➔</button>
-    </section>
-
-    <!-- SECTION 3 CORRIGÉE -->
-    <section class="card span-1">
-      <h2>3. Condensateurs Installés (µF)</h2>
-      <label>C1 Liaison Entrée (µF) <input id="ac_c1" type="number" value="10" step="0.1" oninput="simAC()"></label>
-      <label>C2 Liaison Sortie (µF) <input id="ac_c2" type="number" value="10" step="0.1" oninput="simAC()"></label>
-      <label>CE Découplage (µF) <input id="ac_ce" type="number" value="100" step="1" oninput="simAC()"></label>
-      <hr style="border:0; border-top:1px solid #e2e8f0; margin:8px 0;">
-      <label>Cπ / Cbe (pF) <input id="ac_cpi" type="number" value="25" step="1" oninput="simAC()"></label>
-      <label>Cμ / Cbc (pF) <input id="ac_cmu" type="number" value="2.5" step="0.1" oninput="simAC()"></label>
-      <label>VT Température (mV) <input id="ac_vt" type="number" value="26" step="0.5" oninput="simAC()"></label>
-      <button type="button" style="margin-top:6px;" onclick="simAC()">Re-simuler les Courbes</button>
-    </section>
-
-    <section class="card wide">
-      <h2>Schéma Complet du Montage en Signal Alternatif (AC)</h2>
-      <canvas id="acSchematicCanvas" width="1000" height="240"></canvas>
-    </section>
-
-    <section class="card wide">
-      <h2>Performances de l'Amplificateur (Gains & Fréquences de Coupure)</h2>
-      <div id="resAC" class="results"></div>
-    </section>
-
-    <section class="card wide">
-      <h2>Courbes de Bode (Réponse en Fréquence)</h2>
-      <canvas id="bodeCanvas" width="1200" height="400"></canvas>
-    </section>
-
   </div>
 </div>
 
-</main>
-
 <script>
-function switchTab(tabId) {
-  var contents = document.getElementsByClassName("tab-content");
-  for (var i = 0; i < contents.length; i++) contents[i].classList.remove("active");
-  
-  var buttons = document.getElementsByClassName("tab-btn");
-  for (var j = 0; j < buttons.length; j++) buttons[j].classList.remove("active");
-
-  document.getElementById(tabId).classList.add("active");
-  
-  if(tabId === 'tab-dc') {
-    buttons[0].classList.add("active");
-    simDC();
-  } else {
-    buttons[1].classList.add("active");
-    simAC();
-  }
-}
-
-function backToDC() { switchTab('tab-dc'); }
-
-const E24 = [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1];
-const E6_CAPS = [0.1, 0.22, 0.47, 1.0, 2.2, 4.7, 10, 22, 47, 100, 220, 470, 1000];
-
-function getNearestE24(val) {
-  if (val <= 0) return val;
-  let exponent = Math.floor(Math.log10(val));
-  let fraction = val / Math.pow(10, exponent);
-  let closest = E24.reduce((prev, curr) => Math.abs(curr - fraction) < Math.abs(prev - fraction) ? curr : prev);
-  return closest * Math.pow(10, exponent);
-}
-
-// function getNearestCap(valUf) {
-//  return E6_CAPS.reduce((prev, curr) => Math.abs(curr - valUf) < Math.abs(prev - valUf) ? curr : prev);
-//}
-
-function getNearestCap(valUf) {
-  if (!valUf || valUf <= 0 || !isFinite(valUf)) {
-    return { uF: 0.01, str: "10 nF" };
+  function num(id) {
+    var el = document.getElementById(id);
+    if (!el) return 0;
+    var val = parseFloat(el.value);
+    return isNaN(val) ? 0 : val;
   }
 
-  // Tableau E6 de 1 pF à 1000 µF
-  var caps = [
-    0.000001, 0.0000022, 0.0000047,            // 1pF, 2.2pF, 4.7pF
-    0.00001, 0.000022, 0.000047,              // 10pF, 22pF, 47pF
-    0.0001, 0.00022, 0.00047,                 // 100pF, 220pF, 470pF
-    0.001, 0.0022, 0.0047,                    // 1nF, 2.2nF, 4.7nF
-    0.01, 0.022, 0.047,                       // 10nF, 22nF, 47nF
-    0.1, 0.22, 0.47,                          // 100nF, 220nF, 470nF
-    1, 2.2, 4.7, 10, 22, 47, 100, 220, 1000   // 1µF à 1000µF
-  ];
-
-  var target = caps.find(function(c) { return c >= valUf; }) || 1000;
-  var formattedStr = "";
-
-  if (target < 0.001) {
-    formattedStr = (target * 1e6).toFixed(0) + " pF";
-  } else if (target < 1) {
-    formattedStr = (target * 1000).toFixed(0) + " nF";
-  } else {
-    formattedStr = target + " µF";
+  function metric(lbl, val, unit) {
+    return "<div class='metric-card'><div class='val'>" + val + " " + unit + "</div><div class='lbl'>" + lbl + "</div></div>";
   }
 
-  return { uF: target, str: formattedStr };
-}
+  function getNearestCap(valUf) {
+    if (!valUf || valUf <= 0 || !isFinite(valUf)) {
+      return { uF: 0.01, str: "10 nF" };
+    }
 
-function num(id) {
-  var el = document.getElementById(id);
-  return el ? parseFloat(String(el.value).replace(",", ".")) : 0;
-}
+    var caps = [
+      0.000001, 0.0000022, 0.0000047,
+      0.00001, 0.000022, 0.000047,
+      0.0001, 0.00022, 0.00047,
+      0.001, 0.0022, 0.0047,
+      0.01, 0.022, 0.047,
+      0.1, 0.22, 0.47,
+      1, 2.2, 4.7, 10, 22, 47, 100, 220, 1000
+    ];
 
-function writeValue(id, val) {
-  var el = document.getElementById(id);
-  if (el) el.value = val;
-}
+    var target = caps.find(function(c) { return c >= valUf; }) || 1000;
+    var formattedStr = "";
 
-function metric(name, val, unit) {
-  return '<div class="metric"><span>' + name + '</span><b>' + val + ' ' + unit + '</b></div>';
-}
+    if (target < 0.001) {
+      formattedStr = (target * 1e6).toFixed(0) + " pF";
+    } else if (target < 1) {
+      formattedStr = (target * 1000).toFixed(0) + " nF";
+    } else {
+      formattedStr = target + " µF";
+    }
 
-function calculateDC() {
-var vcc = num("v"), r1 = num("r1"), r2 = num("r2");
-  var rc = num("rc"), re = num("re"), beta = num("be"), vbe = num("vb");
-  var vce_sat = num("vsat"), va = num("va");
-  var pd_max = num("pdmax") / 1000;
-  var useEarly = document.getElementById("toggleEarly").checked;
-
-  // 1. Modèle de Thévenin
-  var vth = vcc * r2 / (r1 + r2);
-  var rth = (r1 * r2) / (r1 + r2);
-
-  // 2. Maille d'entrée idéale (Courants fixes)
-  var ib = Math.max(0, (vth - vbe) / (rth + (beta + 1) * re));
-  var ic = beta * ib;               // Fixé à 25.00 mA si R1/R2/RC/RE sont calculés
-  var ie = (beta + 1) * ib;          // 25.21 mA
-
-  // 3. Maille de sortie idéale
-  var ve = ie * re;                  // 1.20 V
-  var vb_node = ve + vbe;            // 1.95 V
-  var vc = vcc - (ic * rc);          // 6.60 V (Tension au noeud Collecteur / GND)
-  var vce = vc - ve;                 // 5.40 V (Tension entre Collecteur et Émetteur)
-
-  // 4. Correction Early (Uniquement si activée)
-  if (useEarly && va > 0) {
-    ic = ic * (1 + Math.max(0, vce) / va);
-    vc = vcc - (ic * rc);
-    vce = vc - ve;
+    return { uF: target, str: formattedStr };
   }
 
-  var i_pont = vb_node / r2;
-  var pd_q = Math.max(0, vce) * ic;
-  var ic_sat = (vcc - vce_sat) / (rc + re);
+  // 1. ANALYSE STATIQUE (DC)
+  function calculateDC() {
+    var vcc = num("ac_vcc");
+    var beta = num("ac_beta");
+    var r1 = num("ac_r1") * 1000;
+    var r2 = num("ac_r2") * 1000;
+    var rc = num("ac_rc") * 1000;
+    var re = num("ac_re1") + num("ac_re2"); // Re_DC = Re1 + Re2
+    var vbe = 0.7;
 
-  return {
-    vcc: vcc, r1: r1, r2: r2, rc: rc, re: re, beta: beta, vbe: vbe, va: va,
-    ib: ib, ic: ic, ie: ie, vce: vce, vc: vc, ve: ve, vb: vb_node,
-    vth: vth, rth: rth, i_pont: i_pont, vce_sat: vce_sat, ic_sat: ic_sat,
-    pd_q: pd_q, pd_max: pd_max, useEarly: useEarly
-  };
-}
+    // Modèle Thévenin de la base
+    var vth = vcc * (r2 / (r1 + r2));
+    var rth = (r1 * r2) / (r1 + r2);
 
-function designDC() {
-var vcc = num("dv"), ic_d = num("di")/1000;
-  var beta = num("db"), ve_r = num("df"), k = num("dr"), vbe = num("dbe");
+    // Courant de base et de collecteur
+    var ib = (vth - vbe) / (rth + (beta + 1) * re);
+    if (ib < 0) ib = 0; // Transistor bloqué
 
-  var ve = vcc * ve_r;
-  var vce_d = (vcc - ve) / 2;
-  
-  // Correction ici : IE = IC * (beta + 1) / beta
-  var ie_d = ic_d * (beta + 1) / beta;
-  var re = ve / ie_d; 
-  
-  var vc = ve + vce_d;
-  var rc = (vcc - vc) / ic_d;
-  var ib = ic_d / beta;
-  var vb = ve + vbe;
-  var i_r2 = k * ib;
-  var r2 = vb / i_r2;
-  var r1 = (vcc - vb) / (i_r2 + ib);
+    var ic = beta * ib; // en Ampères
+    var ie = (beta + 1) * ib;
 
-  writeValue("v", vcc); writeValue("r1", r1.toFixed(1)); writeValue("r2", r2.toFixed(1));
-  writeValue("rc", rc.toFixed(1)); writeValue("re", re.toFixed(1)); writeValue("be", beta); writeValue("vb", vbe);
-  writeValue("vsat", num("dvsat")); writeValue("pdmax", num("dpdmax")); writeValue("va", num("dva"));
-  simDC();
-}
+    var ve = ie * re;
+    var vc = vcc - (ic * rc);
+    var vce = vc - ve;
 
-function normalizeE24() {
-  writeValue("r1", getNearestE24(num("r1")).toFixed(0));
-  writeValue("r2", getNearestE24(num("r2")).toFixed(0));
-  writeValue("rc", getNearestE24(num("rc")).toFixed(0));
-  writeValue("re", getNearestE24(num("re")).toFixed(0));
-  simDC();
-}
+    var ic_mA = ic * 1000;
+    var ib_uA = ib * 1e6;
 
-function simDC() {
-  var q = calculateDC();
-  document.getElementById("resDC").innerHTML = 
-    metric("VCC (Alim)", q.vcc.toFixed(2), "V") +
-    metric("VTH (Thévenin)", q.vth.toFixed(2), "V") +
-    metric("RTH (Thévenin)", (q.rth / 1000).toFixed(2), "kΩ") +
-    metric("Ipont (Pont Base)", (q.i_pont * 1000).toFixed(3), "mA") +
-    metric("IB (Base)", (q.ib * 1000).toFixed(3), "mA") +
-    metric("IC (Point Q)", (q.ic * 1000).toFixed(2), "mA") +
-    metric("IE (Émetteur)", (q.ie * 1000).toFixed(2), "mA") +
-    metric("VB (Base/GND)", q.vb.toFixed(2), "V") +
-    metric("VC (Col/GND)", q.vc.toFixed(2), "V") +
-    metric("VE (Em/GND)", q.ve.toFixed(2), "V") +
-    metric("VCE (Point Q)", q.vce.toFixed(2), "V") +
-    metric("PD dissipée", (q.pd_q * 1000).toFixed(1), "mW") +
-    metric("IC Saturation", (q.ic_sat * 1000).toFixed(2), "mA");
-
-  var stP = document.getElementById("stDC");
-  var statusMsg = "";
-  if (q.vce <= q.vce_sat) statusMsg += "<span class='danger'>⚠️ Transistor en SATURATION</span>";
-  else if (q.ib <= 0.000001 || q.vth <= q.vbe) statusMsg += "<span class='warn'>⚠️ Transistor BLOCÉ (Coupure)</span>";
-  else statusMsg += "<span class='ok'>✓ Transistor en RÉGIME ACTIF LINÉAIRE</span>";
-
-  if (q.pd_q > q.pd_max) statusMsg += " — <span class='danger'>⚠️ Surchauffe (PD > PDmax) !</span>";
-  else statusMsg += " — <span class='ok'>✓ Puissance autorisée</span>";
-
-  statusMsg += q.useEarly ? " <small style='color:#2563eb;'>(Modèle avec Early $V_A$)</small>" : " <small style='color:#475569;'>(Modèle Idéal)</small>";
-
-  stP.innerHTML = statusMsg;
-
-  drawSchematicDC(q);
-  draw4Quadrants(q);
-}
-
-function transferToAC() {
-  var q = calculateDC();
-  writeValue("ac_ic", (q.ic * 1000).toFixed(2));
-  writeValue("ac_vce", q.vce.toFixed(2));
-  writeValue("ac_beta", q.beta);
-  writeValue("ac_r1", (q.r1 / 1000).toFixed(2));
-  writeValue("ac_r2", (q.r2 / 1000).toFixed(2));
-  writeValue("ac_rc", (q.rc / 1000).toFixed(2));
-  writeValue("ac_re", (q.re / 1000).toFixed(2));
-  switchTab('tab-ac');
-}
-
-function drawSchematicDC(q) {
-  var cv = document.getElementById("schematicCanvas");
-  var ctx = cv.getContext("2d");
-  ctx.clearRect(0, 0, cv.width, cv.height);
-  ctx.strokeStyle = "#1e293b"; ctx.lineWidth = 2; ctx.fillStyle = "#0f172a"; ctx.font = "11px Arial";
-
-  ctx.beginPath(); ctx.moveTo(30, 20); ctx.lineTo(270, 20); ctx.stroke();
-  ctx.fillText("VCC = " + q.vcc + "V", 30, 15);
-  ctx.beginPath(); ctx.moveTo(30, 260); ctx.lineTo(270, 260); ctx.stroke();
-  ctx.fillText("GND (0V)", 30, 275);
-
-  var tx = 180, ty = 130;
-  ctx.beginPath(); ctx.arc(tx, ty, 18, 0, 2*Math.PI); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(tx - 7, ty - 10); ctx.lineTo(tx - 7, ty + 10); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(80, ty); ctx.lineTo(tx - 7, ty); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(tx + 5, ty - 8); ctx.lineTo(tx + 5, ty - 22); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(tx + 5, ty + 8); ctx.lineTo(tx + 5, ty + 22); ctx.stroke();
-
-  function drawR(x, y, label, val) {
-    ctx.fillStyle = "#ffffff"; ctx.fillRect(x - 7, y - 12, 14, 24); ctx.strokeRect(x - 7, y - 12, 14, 24);
-    ctx.fillStyle = "#0f172a"; ctx.fillText(label + " (" + val + "Ω)", x + 12, y + 4);
+    return {
+      vth: vth, rth: rth,
+      ib_uA: ib_uA, ic_mA: ic_mA,
+      ve: ve, vc: vc, vce: vce, vcc: vcc,
+      beta: beta, rc: rc, re: re
+    };
   }
 
-  ctx.beginPath(); ctx.moveTo(80, 20); ctx.lineTo(80, 260); ctx.stroke();
-  drawR(80, 60, "R1", q.r1.toFixed(0)); drawR(80, 200, "R2", q.r2.toFixed(0));
+  // 2. ANALYSE DYNAMIQUE (AC)
+  function calculateAC(dc) {
+    var ic_mA = dc.ic_mA, vce = dc.vce, beta = dc.beta;
+    var vcc = dc.vcc;
+    var r1 = num("ac_r1") * 1000, r2 = num("ac_r2") * 1000;
+    var rc = num("ac_rc") * 1000;
 
-  ctx.beginPath(); ctx.moveTo(tx + 5, 20); ctx.lineTo(tx + 5, ty - 22); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(tx + 5, ty + 22); ctx.lineTo(tx + 5, 260); ctx.stroke();
-  drawR(tx + 5, 55, "RC", q.rc.toFixed(0)); drawR(tx + 5, 205, "RE", q.re.toFixed(0));
+    var re1 = num("ac_re1"); 
+    var re2 = num("ac_re2"); 
+    var re_dc = re1 + re2;   
 
-  ctx.fillStyle = "#059669"; ctx.font = "bold 10px Arial";
-  ctx.fillText("VB=" + q.vb.toFixed(2) + "V", tx - 65, ty - 6);
-  ctx.fillText("VC=" + q.vc.toFixed(2) + "V", tx + 12, ty - 25);
-  ctx.fillText("VE=" + q.ve.toFixed(2) + "V", tx + 12, ty + 35);
-}
+    var rl = num("ac_rl") * 1000, rs = num("ac_rs");
+    var rx = 10, va = 100, vt_mV = num("ac_vt") || 26;
+    var fsig = num("ac_fsig") || 1000000;
 
-function draw4Quadrants(q) {
-  var cv = document.getElementById("quadrantsCanvas");
-  var ctx = cv.getContext("2d");
-  var w = cv.width, h = cv.height;
-  ctx.clearRect(0, 0, w, h);
+    var chkCe = document.getElementById("bypass_ce");
+    var has_ce = chkCe ? chkCe.checked : true;
 
-  var cx = w / 2, cy = h / 2, margin = 50;
+    var ic = ic_mA / 1000, vt = vt_mV / 1000;
+    var gm = ic / vt;
+    var rpi = beta / gm;
+    var ro = (va + Math.max(0.1, vce)) / Math.max(0.00001, ic);
+    var re_dyn = vt / Math.max(0.00001, ic);
 
-  var maxVce = Math.max(q.vcc * 1.15, 12);
-  var maxIc = Math.max(q.ic_sat * 1000 * 1.3, (q.ic * 1000) * 1.8, 5);
-  var maxIb = Math.max((maxIc / q.beta) * 1.3, (q.ib * 1000) * 2, 0.05);
-  var maxVbe = 0.9;
+    var re_ac = has_ce ? re1 : re_dc;
 
-  function px_vce(v) { return cx + (v / maxVce) * (cx - margin); }
-  function py_ic(i)  { return cy - (i / maxIc) * (cy - margin); }
-  function px_ib(i)  { return cx - (i / maxIb) * (cx - margin); }
-  function py_vbe(v) { return cy + (v / maxVbe) * (cy - margin); }
+    var rac = (rc * rl) / (rc + rl);
+    var z_out_c = (ro * rac) / (ro + rac);
 
-  ctx.strokeStyle = "#334155"; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(margin / 2, cy); ctx.lineTo(w - margin / 2, cy); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx, margin / 2); ctx.lineTo(cx, h - margin / 2); ctx.stroke();
+    var rb = (r1 * r2) / (r1 + r2);
+    var zb_in = rx + rpi + (beta + 1) * re_ac;
+    var zin = (rb * zb_in) / (rb + zb_in);
 
-  ctx.fillStyle = "#0f172a"; ctx.font = "bold 12px Arial";
-  ctx.fillText("VCE (V) ►", w - 85, cy - 8);
-  ctx.fillText("▲ IC (mA)", cx + 8, margin / 2 + 10);
-  ctx.fillText("◄ IB (mA)", margin / 2, cy - 8);
-  ctx.fillText("▼ VBE (V)", cx + 8, h - margin / 2);
+    var av_int = (re_ac > 0) ? (-rc / (re_ac + re_dyn)) : (-gm * z_out_c);
+    var av_sys = av_int * (zin / (zin + rs));
+    var av_db = 20 * Math.log10(Math.max(0.0001, Math.abs(av_sys)));
 
-  ctx.fillStyle = "#64748b"; ctx.font = "bold 11px Arial";
-  ctx.fillText("QUADRANT 1 : Sortie IC = f(VCE)", cx + 40, 30);
-  ctx.fillText("QUADRANT 2 : Transfert IC = β · IB", 40, 30);
-  ctx.fillText("QUADRANT 3 : Entrée IB = f(VBE)", 40, h - 20);
-  ctx.fillText("QUADRANT 4 : Transconductance IC = f(VBE)", cx + 40, h - 20);
+    var f_target = Math.max(1, fsig / 10);
 
-  // Q1 : Zone Saturation + Zone Blocage
-  var xSat = px_vce(q.vce_sat);
-  ctx.fillStyle = "rgba(220, 38, 38, 0.1)";
-  ctx.fillRect(cx, margin/2, xSat - cx, cy - margin/2);
-  ctx.fillStyle = "#dc2626"; ctx.font = "10px Arial";
-  ctx.fillText("SATURATION", cx + 2, margin/2 + 20);
+    var c1_req_uF = (1 / (2 * Math.PI * (rs + zin) * f_target)) * 1e6;
+    var c2_req_uF = (1 / (2 * Math.PI * (rc + rl) * f_target)) * 1e6;
 
-  ctx.fillStyle = "rgba(217, 119, 6, 0.15)";
-  ctx.fillRect(cx, cy - 12, w - margin/2 - cx, 12);
-  ctx.fillStyle = "#d97706";
-  ctx.fillText("BLOCAGE (Coupure)", w - 160, cy - 3);
+    var rb_rs = (rb * rs) / (rb + rs);
+    var req_ce_num = re2 * (rpi + rb_rs + (beta + 1) * re1);
+    var req_ce_den = re2 * (beta + 1) + rpi + rb_rs;
+    var req_ce = (req_ce_den > 0 && re2 > 0) ? (req_ce_num / req_ce_den) : 0;
 
-  ctx.strokeStyle = "#93c5fd"; ctx.lineWidth = 1.2;
-  for (var k = 1; k <= 5; k++) {
-    var ib_k = (maxIb / 5) * k;
+    var ce_req_uF = (has_ce && req_ce > 0) ? ((1 / (2 * Math.PI * req_ce * f_target)) * 1e6) : 0;
+
+    var c1_std_obj = getNearestCap(c1_req_uF);
+    var c2_std_obj = getNearestCap(c2_req_uF);
+    var ce_std_obj = has_ce ? getNearestCap(ce_req_uF) : { uF: 0, str: "N/A" };
+
+    return {
+      gm: gm, rpi: rpi, ro: ro, rx: rx, zin: zin, z_out_c: z_out_c,
+      av_sys: av_sys, av_db: av_db, vcc: vcc, ic: ic_mA, vce: vce, beta: beta,
+      c1_req: c1_req_uF, c2_req: c2_req_uF, ce_req: ce_req_uF,
+      c1_std: c1_std_obj.str, c2_std: c2_std_obj.str, ce_std: ce_std_obj.str,
+      c1_std_uF: c1_std_obj.uF, c2_std_uF: c2_std_obj.uF, ce_std_uF: ce_std_obj.uF
+    };
+  }
+
+  function applySuggestedCaps() {
+    var dc = calculateDC();
+    var p = calculateAC(dc);
+    if (!p) return;
+
+    var elC1 = document.getElementById("ac_c1");
+    var elC2 = document.getElementById("ac_c2");
+    var elCE = document.getElementById("ac_ce");
+
+    if (elC1) elC1.value = p.c1_std_uF;
+    if (elC2) elC2.value = p.c2_std_uF;
+    if (elCE) elCE.value = p.ce_std_uF;
+
+    simAll();
+  }
+
+  // SIMULATION GLOBALE (DC + AC + CANVAS)
+  function simAll() {
+    var dc = calculateDC();
+    var ac = calculateAC(dc);
+
+    // A. Affichage Analyse Statique (DC)
+    var elemResDC = document.getElementById("resDC");
+    if (elemResDC) {
+      elemResDC.innerHTML = 
+        metric("Vth (Thévenin)", dc.vth.toFixed(2), "V") +
+        metric("IB (Base)", dc.ib_uA.toFixed(1), "µA") +
+        metric("IC (Collecteur)", dc.ic_mA.toFixed(2), "mA") +
+        metric("VE (Émetteur)", dc.ve.toFixed(2), "V") +
+        metric("VC (Collecteur)", dc.vc.toFixed(2), "V") +
+        metric("VCE (Repos)", dc.vce.toFixed(2), "V");
+    }
+
+    // B. Affichage Condensateurs Théoriques
+    function formatVal(valUf) {
+      if (!valUf || valUf <= 0 || !isFinite(valUf)) return "0 pF";
+      if (valUf < 0.001) return (valUf * 1e6).toFixed(1) + " pF";
+      if (valUf < 1) return (valUf * 1000).toFixed(1) + " nF";
+      return valUf.toFixed(2) + " µF";
+    }
+
+    var elemCond = document.getElementById("calcCondResults");
+    if (elemCond) {
+      elemCond.innerHTML = 
+        "<b>Valeurs théoriques requises (pour Fs = " + num("ac_fsig") + " Hz) :</b><br>" +
+        "• C1 ≥ <b>" + formatVal(ac.c1_req) + "</b> (Normalisé : <b>" + ac.c1_std + "</b>)<br>" +
+        "• C2 ≥ <b>" + formatVal(ac.c2_req) + "</b> (Normalisé : <b>" + ac.c2_std + "</b>)<br>" +
+        "• CE ≥ <b>" + formatVal(ac.ce_req) + "</b> (Normalisé : <b>" + ac.ce_std + "</b>)";
+    }
+
+    // C. Affichage Analyse Dynamique (AC)
+    var elemResAC = document.getElementById("resAC");
+    if (elemResAC) {
+      elemResAC.innerHTML = 
+        metric("Transconductance gm", (ac.gm * 1000).toFixed(1), "mA/V") +
+        metric("Résistance rπ", ac.rpi.toFixed(0), "Ω") +
+        metric("Impédance Zin", (ac.zin < 1000 ? ac.zin.toFixed(0) + " Ω" : (ac.zin/1000).toFixed(2) + " kΩ"), "") +
+        metric("Impédance Zout", (ac.z_out_c / 1000).toFixed(2), "kΩ") +
+        metric("Gain Avs", ac.av_sys.toFixed(1), "V/V") +
+        metric("Gain dB", ac.av_db.toFixed(1), "dB");
+    }
+
+    // D. Tracé du graphique 4 Quadrants
+    draw4Quadrants(ac);
+  }
+
+  // 3. GRAPHISME À 4 QUADRANTS
+  function draw4Quadrants(q) {
+    var canvas = document.getElementById("quadrantsCanvas");
+    if (!canvas) return;
+    var ctx = canvas.getContext("2d");
+
+    var width = canvas.width;
+    var height = canvas.height;
+    var ox = width / 2;
+    var oy = height / 2;
+
+    ctx.clearRect(0, 0, width, height);
+
+    // Axes principaux
     ctx.beginPath();
-    for (var v = 0; v <= maxVce; v += 0.1) {
-      var ic_b = q.beta * ib_k * (1 - Math.exp(-v / 0.3));
-      var ic_v = q.useEarly ? ic_b * (1 + v / q.va) : ic_b;
-      if (v === 0) ctx.moveTo(px_vce(v), py_ic(ic_v));
-      else ctx.lineTo(px_vce(v), py_ic(ic_v));
+    ctx.strokeStyle = "#475569";
+    ctx.lineWidth = 1.5;
+    ctx.moveTo(0, oy); ctx.lineTo(width, oy);
+    ctx.moveTo(ox, 0); ctx.lineTo(ox, height);
+    ctx.stroke();
+
+    // Échelles de tracé
+    var scaleX = (width / 2 - 50) / 15;   // VCE max = 15V
+    var scaleY = (height / 2 - 50) / 60;  // IC max = 60mA
+    var scaleIb = (width / 2 - 50) / 0.5; // IB max = 0.5mA
+    var scaleVbe = (height / 2 - 50) / 1; // VBE max = 1V
+
+    // Intitulés des quadrants
+    ctx.font = "bold 12px sans-serif";
+    ctx.fillStyle = "#64748b";
+    ctx.fillText("QUADRANT 1 : IC = f(VCE)", ox + 20, 20);
+    ctx.fillText("QUADRANT 2 : IC = β × IB", 20, 20);
+    ctx.fillText("QUADRANT 3 : IB = f(VBE)", 20, height - 20);
+    ctx.fillText("QUADRANT 4 : Transfert VBE", ox + 20, height - 20);
+
+    // --- QUADRANT 1 : IC = f(VCE) ---
+    var rc_val = (num("ac_rc") || 0) * 1000;
+    var re_val = (num("ac_re1") || 0) + (num("ac_re2") || 0);
+    var r_tot = rc_val + re_val;
+
+    var vcc_val = q.vcc || 12;
+    var ic_sat_val = r_tot > 0 ? (vcc_val / r_tot) * 1000 : 0;
+    var vce_max_val = vcc_val;
+
+    // Reseau de courbes
+    ctx.lineWidth = 1;
+    for (var ib_step = 0.05; ib_step <= 0.4; ib_step += 0.075) {
+      ctx.beginPath();
+      ctx.strokeStyle = "#93c5fd";
+      for (var v = 0; v <= 15; v += 0.2) {
+        var ic_curve = q.beta * ib_step * (1 - Math.exp(-v / 0.7));
+        var px = ox + v * scaleX;
+        var py = oy - ic_curve * scaleY;
+        if (v === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+
+    // Droite de charge DC
+    var x_sat_px = ox;                            
+    var y_sat_px = oy - (ic_sat_val * scaleY);     
+    var x_bloc_px = ox + (vce_max_val * scaleX);       
+    var y_bloc_px = oy;                           
+
+    ctx.beginPath();
+    ctx.strokeStyle = "#2563eb";
+    ctx.lineWidth = 2.5;
+    ctx.moveTo(x_sat_px, y_sat_px);
+    ctx.lineTo(x_bloc_px, y_bloc_px);
+    ctx.stroke();
+
+    // Points d'axes
+    ctx.beginPath();
+    ctx.arc(x_sat_px, y_sat_px, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = "#2563eb";
+    ctx.fill();
+    ctx.font = "bold 11px sans-serif";
+    ctx.fillText("I_sat = " + ic_sat_val.toFixed(1) + " mA", x_sat_px + 8, y_sat_px + 4);
+
+    ctx.beginPath();
+    ctx.arc(x_bloc_px, y_bloc_px, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = "#2563eb";
+    ctx.fill();
+    ctx.fillText("Vcc = " + vce_max_val.toFixed(1) + " V", x_bloc_px - 30, y_bloc_px + 18);
+
+    // --- QUADRANT 2 : IC = β × IB ---
+    ctx.beginPath();
+    ctx.strokeStyle = "#16a34a";
+    ctx.lineWidth = 2;
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(ox - (0.4 * scaleIb), oy - (q.beta * 0.4 * scaleY));
+    ctx.stroke();
+
+    // --- QUADRANT 3 : IB = f(VBE) ---
+    ctx.beginPath();
+    ctx.strokeStyle = "#d97706";
+    ctx.lineWidth = 2;
+    for (var vbe = 0; vbe <= 0.9; vbe += 0.02) {
+      var ib_diode = 0.0001 * (Math.exp(vbe / 0.026) - 1);
+      var px3 = ox - (ib_diode * scaleIb);
+      var py3 = oy + (vbe * scaleVbe);
+      if (vbe === 0) ctx.moveTo(px3, py3); else ctx.lineTo(px3, py3);
     }
     ctx.stroke();
-  }
 
-  var ic_max_dc = (q.vcc / (q.rc + q.re)) * 1000;
-  ctx.strokeStyle = "#2563eb"; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(px_vce(0), py_ic(ic_max_dc)); ctx.lineTo(px_vce(q.vcc), py_ic(0)); ctx.stroke();
-
-// ==========================================
-  // Q1 : DROITE DE CHARGE + POINTS REMARQUABLES
-  // ==========================================
-
-  // 1. Calcul des valeurs physiques aux limites
-  var rc = (num("ac_rc") || 0) * 1000;
-  var re = ((num("ac_re1") || 0) + (num("ac_re2") || 0));
-  var r_total = rc + re;
-
-  // Calcul sécurisé de Vcc et de Ic_sat
-  var vcc = num("ac_vcc") || (q ? (q.vce + (q.ic / 1000) * r_total) : 12); 
-  var ic_sat_mA = r_total > 0 ? (vcc / r_total) * 1000 : 0;
-  var vce_max = vcc;
-
-  // 2. Récupération des fonctions de mapping du Canvas (Q1)
-  // On utilise les fonctions de conversion x/y vers pixels si elles existent,
-  // sinon on retombe sur drawPoint/Canvas direct.
-  var x_sat_px = typeof mapX === "function" ? mapX(1, 0) : (typeof toX === "function" ? toX(0) : null);
-  var y_sat_px = typeof mapY === "function" ? mapY(1, ic_sat_mA) : (typeof toY === "function" ? toY(ic_sat_mA) : null);
-
-  var x_bloc_px = typeof mapX === "function" ? mapX(1, vce_max) : (typeof toX === "function" ? toX(vce_max) : null);
-  var y_bloc_px = typeof mapY === "function" ? mapY(1, 0) : (typeof toY === "function" ? toY(0) : null);
-
-  // 3. Dessin des étiquettes directement sur les axes (Couleur Bleu Droite de Charge)
-  ctx.save();
-  ctx.fillStyle = "#2563eb";
-  ctx.font = "bold 11px sans-serif";
-
-  // A. Point de Saturation sur l'axe Y (Haut-Gauche de la droite)
-  if (x_sat_px !== null && y_sat_px !== null) {
+    // --- QUADRANT 4 : Transfert VBE ---
     ctx.beginPath();
-    ctx.arc(x_sat_px, y_sat_px, 4, 0, 2 * Math.PI);
-    ctx.fill();
-    // Affichage à droite de l'axe Y
-    ctx.fillText("I_sat = " + ic_sat_mA.toFixed(1) + " mA", x_sat_px + 8, y_sat_px + 4);
-  } else {
-    // Si pas de fonctions de conversion, appel forcé sur projection
-    drawPoint(0, ic_sat_mA, "#2563eb", "I_sat = " + ic_sat_mA.toFixed(1) + " mA");
-  }
+    ctx.strokeStyle = "#9333ea";
+    ctx.lineWidth = 1.5;
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(ox + (1 * scaleX), oy + (1 * scaleVbe));
+    ctx.stroke();
 
-  // B. Point de Blocage sur l'axe X (Bas-Droite de la droite)
-  if (x_bloc_px !== null && y_bloc_px !== null) {
+    // --- POINT Q PROJETÉ SUR LES 4 QUADRANTS ---
+    var ib_q = q.ic / q.beta; 
+    var vbe_q = 0.65;          
+
+    var qX1 = ox + (q.vce * scaleX);
+    var qY1 = oy - (q.ic * scaleY);
+
+    var qX2 = ox - (ib_q * scaleIb);
+    var qY2 = qY1;
+
+    var qX3 = qX2;
+    var qY3 = oy + (vbe_q * scaleVbe);
+
+    var qX4 = ox + (vbe_q * scaleX);
+    var qY4 = qY3;
+
+    // Lignes pointillées
     ctx.beginPath();
-    ctx.arc(x_bloc_px, y_bloc_px, 4, 0, 2 * Math.PI);
-    ctx.fill();
-    // Affichage juste au-dessus du point sur l'axe X
-    ctx.fillText("Vcc = " + vce_max.toFixed(1) + " V", x_bloc_px - 30, y_bloc_px - 8);
-  } else {
-    drawPoint(vce_max, 0, "#2563eb", "Vcc = " + vce_max.toFixed(1) + " V");
-  }
-
-  ctx.restore();
-
-  // Q2
-  ctx.strokeStyle = "#059669"; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px_ib(maxIc / q.beta), py_ic(maxIc)); ctx.stroke();
-
-  // Q3
-  ctx.strokeStyle = "#7c3aed"; ctx.lineWidth = 2; ctx.beginPath();
-  var first_q3 = true;
-  for (var vbe_i = 0; vbe_i <= maxVbe; vbe_i += 0.005) {
-    var ib_uA = 0.01 * (Math.exp(vbe_i / 0.026) - 1);
-    if (ib_uA <= maxIb) {
-      if (first_q3) { ctx.moveTo(px_ib(ib_uA), py_vbe(vbe_i)); first_q3 = false; }
-      else ctx.lineTo(px_ib(ib_uA), py_vbe(vbe_i));
-    }
-  }
-  ctx.stroke();
-
-  // Q4
-  ctx.strokeStyle = "#db2777"; ctx.lineWidth = 2; ctx.beginPath();
-  var first_q4 = true;
-  for (var vbe_v = 0; vbe_v <= maxVbe; vbe_v += 0.005) {
-    var ic_mA = q.beta * (0.01 * (Math.exp(vbe_v / 0.026) - 1));
-    if (ic_mA <= maxIc) {
-      var x_q4 = cx + (ic_mA / maxIc) * (cx - margin);
-      var y_q4 = py_vbe(vbe_v);
-      if (first_q4) { ctx.moveTo(x_q4, y_q4); first_q4 = false; }
-      else ctx.lineTo(x_q4, y_q4);
-    }
-  }
-  ctx.stroke();
-
-  // Point Q projections
-  var q_ic_mA = q.ic * 1000, q_ib_mA = q.ib * 1000, q_vce_v = q.vce, q_vbe_v = q.vbe;
-  var q1_x = px_vce(q_vce_v), q1_y = py_ic(q_ic_mA);
-  var q2_x = px_ib(q_ib_mA),  q2_y = py_ic(q_ic_mA);
-  var q3_x = px_ib(q_ib_mA),  q3_y = py_vbe(q_vbe_v);
-  var q4_x = cx + (q_ic_mA / maxIc) * (cx - margin), q4_y = py_vbe(q_vbe_v);
-
-  ctx.strokeStyle = "#94a3b8"; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
-  ctx.beginPath();
-  ctx.moveTo(q1_x, q1_y); ctx.lineTo(q2_x, q2_y);
-  ctx.lineTo(q3_x, q3_y); ctx.lineTo(q4_x, q4_y);
-  ctx.lineTo(q1_x, q1_y); ctx.stroke(); ctx.setLineDash([]);
-
-  function drawPoint(x, y, color, label) {
-    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 5, 0, 2*Math.PI); ctx.fill();
-    if (label) { ctx.font = "bold 11px Arial"; ctx.fillText(label, x + 8, y - 6); }
-  }
-
-  drawPoint(q1_x, q1_y, "#059669", "Point Q (" + q_vce_v.toFixed(2) + "V, " + q_ic_mA.toFixed(2) + "mA)");
-  drawPoint(q2_x, q2_y, "#059669", null);
-  drawPoint(q3_x, q3_y, "#7c3aed", "IB = " + (q_ib_mA * 1000).toFixed(1) + " µA");
-  drawPoint(q4_x, q4_y, "#db2777", "VBE = " + q_vbe_v.toFixed(2) + " V");
-}
-
-function calculateAC() {
-var ic_mA = num("ac_ic"), vce = num("ac_vce"), beta = num("ac_beta");
-  var r1 = num("ac_r1") * 1000, r2 = num("ac_r2") * 1000;
-  var rc = num("ac_rc") * 1000;
-
-  // Lecture des résistances Re1 (non découplée) et Re2 (découplée par CE)
-  var re1 = num("ac_re1"); 
-  var re2 = num("ac_re2"); 
-  var re_dc = re1 + re2;   
-
-  var rl = num("ac_rl") * 1000, rs = num("ac_rs");
-  var c1 = num("ac_c1") * 1e-6, c2 = num("ac_c2") * 1e-6, ce = num("ac_ce") * 1e-6;
-  var rx = 10, va = 100, vt_mV = num("ac_vt") || 26;
-  var cpi = num("ac_cpi") * 1e-12, cmu = num("ac_cmu") * 1e-12;
-  var fsig = num("ac_fsig") || 1000000;
-
-  // Lecture sécurisée de la case à cocher (supporte plusieurs ID possibles)
-  var chkCe = document.getElementById("bypass_ce") || document.getElementById("ac_ce_check") || document.querySelector("input[type='checkbox']");
-  var has_ce = chkCe ? chkCe.checked : true;
-
-  var ic = ic_mA / 1000, vt = vt_mV / 1000;
-  var gm = ic / vt;
-  var rpi = beta / gm;
-  var ro = (va + Math.max(0.1, vce)) / Math.max(0.00001, ic);
-  var re_dyn = vt / Math.max(0.00001, ic);
-
-  var re_ac = has_ce ? re1 : re_dc;
-
-  var rac = (rc * rl) / (rc + rl);
-  var z_out_c = (ro * rac) / (ro + rac);
-
-  var rb = (r1 * r2) / (r1 + r2);
-  var zb_in = rx + rpi + (beta + 1) * re_ac;
-  var zin = (rb * zb_in) / (rb + zb_in);
-
-  var av_int = (re_ac > 0) ? (-rc / (re_ac + re_dyn)) : (-gm * z_out_c);
-  var av_sys = av_int * (zin / (zin + rs));
-  var av_db = 20 * Math.log10(Math.max(0.0001, Math.abs(av_sys)));
-
-  // CALCUL DIRECT EN FONCTION DE FSIG (Sans limitation à 100 kHz)
-  // Coupure cible située à Fs / 10
-  var f_target = Math.max(1, fsig / 10);
-
-  var c1_req_uF = (1 / (2 * Math.PI * (rs + zin) * f_target)) * 1e6;
-  var c2_req_uF = (1 / (2 * Math.PI * (rc + rl) * f_target)) * 1e6;
-
-  // Impédance vue par le condensateur de découplage CE (autour de Re2)
-  var rb_rs = (rb * rs) / (rb + rs);
-  var req_ce_num = re2 * (rpi + rb_rs + (beta + 1) * re1);
-  var req_ce_den = re2 * (beta + 1) + rpi + rb_rs;
-  var req_ce = (req_ce_den > 0 && re2 > 0) ? (req_ce_num / req_ce_den) : 0;
-
-  var ce_req_uF = (has_ce && req_ce > 0) ? ((1 / (2 * Math.PI * req_ce * f_target)) * 1e6) : 0;
-
-  // Calcul des valeurs normalisées (Objet {uF, str})
-  var c1_std_obj = getNearestCap(c1_req_uF);
-  var c2_std_obj = getNearestCap(c2_req_uF);
-  var ce_std_obj = has_ce ? getNearestCap(ce_req_uF) : { uF: 0, str: "N/A" };
-
-  var fl_c1 = 1 / (2 * Math.PI * (rs + zin) * Math.max(1e-12, c1));
-  var fl_c2 = 1 / (2 * Math.PI * (rc + rl) * Math.max(1e-12, c2));
-  var fl_ce = (has_ce && req_ce > 0) ? (1 / (2 * Math.PI * req_ce * Math.max(1e-12, ce))) : 0;
-  var fl_total = Math.max(fl_c1, fl_c2, fl_ce);
-
-  var c_miller = cmu * (1 + Math.abs(av_int));
-  var c_in_total = cpi + c_miller;
-  var req_h = 1 / ((1 / (rs + rx)) + (1 / rpi) + (1 / rb));
-  var fh = 1 / (2 * Math.PI * req_h * Math.max(1e-14, c_in_total));
-
-  return {
-    gm: gm, rpi: rpi, ro: ro, rx: rx, zin: zin, z_out_c: z_out_c,
-    av_sys: av_sys, av_db: av_db,
-    c1_req: c1_req_uF, c2_req: c2_req_uF, ce_req: ce_req_uF,
-    c1_std: c1_std_obj.str, c2_std: c2_std_obj.str, ce_std: ce_std_obj.str,
-    c1_std_uF: c1_std_obj.uF, c2_std_uF: c2_std_obj.uF, ce_std_uF: ce_std_obj.uF,
-    fl: fl_total, fh: fh
-  };
-}
-
-function applyCalculatedCaps() {
-  var p = calculateAC();
-  writeValue("ac_c1", p.c1_std);
-  writeValue("ac_c2", p.c2_std);
-  writeValue("ac_ce", p.ce_std);
-  simAC();
-}
-
-function simAC() {
-var p = calculateAC();
-  if (!p) return;
-
-  function formatVal(valUf) {
-    if (!valUf || valUf <= 0 || !isFinite(valUf)) return "0 pF";
-    if (valUf < 0.001) return (valUf * 1e6).toFixed(1) + " pF";
-    if (valUf < 1) return (valUf * 1000).toFixed(1) + " nF";
-    return valUf.toFixed(2) + " µF";
-  }
-
-  // 1. Injection du texte DANS la carte 2 (Calculateur de Condensateurs)
-  var elemCond = document.getElementById("calcCondResults");
-  if (elemCond) {
-    elemCond.innerHTML = 
-      "<div style='margin-top:15px; padding:10px; background:#f0f7ff; border-radius:6px; font-size:13px; color:#333;'>" +
-      "<b>Valeurs théoriques requises (pour Fs = " + num("ac_fsig") + " Hz) :</b><br>" +
-      "• C1 ≥ <b>" + formatVal(p.c1_req) + "</b> (Normalisé : <b>" + p.c1_std + "</b>)<br>" +
-      "• C2 ≥ <b>" + formatVal(p.c2_req) + "</b> (Normalisé : <b>" + p.c2_std + "</b>)<br>" +
-      "• CE ≥ <b>" + formatVal(p.ce_req) + "</b> (Normalisé : <b>" + p.ce_std + "</b>)" +
-      "</div>";
-  }
-
-  // 2. Affichage des métriques électriques
-  var elemResAC = document.getElementById("resAC");
-  if (elemResAC) {
-    elemResAC.innerHTML = 
-      metric("Transconductance gm", (p.gm * 1000).toFixed(1), "mA/V") +
-      metric("Résistance rπ", p.rpi.toFixed(0), "Ω") +
-      metric("Impédance Entrée Zin", (p.zin < 1000 ? p.zin.toFixed(0) + " Ω" : (p.zin/1000).toFixed(2) + " kΩ"), "") +
-      metric("Impédance Sortie Zout", (p.z_out_c / 1000).toFixed(2), "kΩ") +
-      metric("Gain en Tension Avs", p.av_sys.toFixed(1), "V/V") +
-      metric("Gain Avs (dB)", p.av_db.toFixed(1), "dB") +
-      metric("Coupure Basse fL", p.fl.toFixed(1), "Hz") +
-      metric("Coupure Haute fH", (p.fh / 1e6).toFixed(2), "MHz");
-  }
-
-  if (typeof drawACSchematic === "function") drawACSchematic();
-  if (typeof drawBode === "function") drawBode(p);
-
-drawLoadLine("bjtCanvas", {
-    vcc: num("ac_vcc") || 12,                  // Remplacez 'ac_vcc' par votre ID d'input Vcc s'il est différent
-    rc: num("ac_rc") * 1000, 
-    re: num("ac_re1") + num("ac_re2"), 
-    vce_q: num("ac_vce"), 
-    ic_q_mA: num("ac_ic")
-  });  
-  
-}
-
-function applySuggestedCaps() {
-  var p = calculateAC();
-  if (!p) return;
-
-  // Injection des valeurs normalisées directement dans les champs HTML (en µF)
-  var elC1 = document.getElementById("ac_c1");
-  var elC2 = document.getElementById("ac_c2");
-  var elCE = document.getElementById("ac_ce");
-
-  if (elC1) elC1.value = p.c1_std_uF;
-  if (elC2) elC2.value = p.c2_std_uF;
-  if (elCE) elCE.value = p.ce_std_uF;
-
-  // Relance la simulation pour mettre à jour les graphiques et coupures
-  simAC();
-}
-
-function drawACSchematic() {
-  var cv = document.getElementById("acSchematicCanvas");
-  var ctx = cv.getContext("2d");
-  ctx.clearRect(0, 0, cv.width, cv.height);
-
-  ctx.strokeStyle = "#1e293b"; ctx.lineWidth = 2; ctx.fillStyle = "#0f172a"; ctx.font = "11px Arial";
-
-  ctx.beginPath(); ctx.moveTo(150, 20); ctx.lineTo(650, 20); ctx.stroke();
-  ctx.fillText("VCC", 150, 15);
-  ctx.beginPath(); ctx.moveTo(50, 220); ctx.lineTo(850, 220); ctx.stroke();
-  ctx.fillText("GND (Masse AC)", 50, 235);
-
-  ctx.beginPath(); ctx.arc(80, 120, 12, 0, 2*Math.PI); ctx.stroke();
-  ctx.fillText("Vin", 72, 124);
-  ctx.beginPath(); ctx.moveTo(80, 132); ctx.lineTo(80, 220); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(80, 108); ctx.lineTo(80, 70); ctx.lineTo(120, 70); ctx.stroke();
-  
-  ctx.strokeRect(120, 62, 24, 16); ctx.fillText("Rs (" + num("ac_rs") + "Ω)", 115, 55);
-  ctx.beginPath(); ctx.moveTo(144, 70); ctx.lineTo(180, 70); ctx.stroke();
-
-  ctx.beginPath(); ctx.moveTo(180, 60); ctx.lineTo(180, 80); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(186, 60); ctx.lineTo(186, 80); ctx.stroke();
-  ctx.fillText("C1 (" + num("ac_c1") + "µF)", 170, 52);
-  ctx.beginPath(); ctx.moveTo(186, 70); ctx.lineTo(300, 70); ctx.stroke();
-
-  ctx.beginPath(); ctx.moveTo(300, 20); ctx.lineTo(300, 220); ctx.stroke();
-  ctx.strokeRect(292, 30, 16, 24); ctx.fillText("R1", 315, 45);
-  ctx.strokeRect(292, 150, 16, 24); ctx.fillText("R2", 315, 165);
-
-  var tx = 400, ty = 100;
-  ctx.beginPath(); ctx.arc(tx, ty, 18, 0, 2*Math.PI); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(tx - 7, ty - 10); ctx.lineTo(tx - 7, ty + 10); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(300, 70); ctx.lineTo(tx - 7, ty); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(tx + 5, ty - 8); ctx.lineTo(tx + 5, ty - 22); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(tx + 5, ty + 8); ctx.lineTo(tx + 5, ty + 22); ctx.stroke();
-
-  ctx.beginPath(); ctx.moveTo(tx + 5, 20); ctx.lineTo(tx + 5, ty - 22); ctx.stroke();
-  ctx.strokeRect(tx - 3, 30, 16, 24); ctx.fillText("RC", tx + 20, 45);
-
-  ctx.beginPath(); ctx.moveTo(tx + 5, ty + 22); ctx.lineTo(tx + 5, 220); ctx.stroke();
-  ctx.strokeRect(tx - 3, 150, 16, 24); ctx.fillText("RE", tx + 20, 165);
-
-  if (document.getElementById("bypass_ce").checked) {
-    ctx.beginPath(); ctx.moveTo(tx + 5, 135); ctx.lineTo(480, 135); ctx.lineTo(480, 220); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(470, 165); ctx.lineTo(490, 165); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(470, 171); ctx.lineTo(490, 171); ctx.stroke();
-    ctx.fillText("CE (" + num("ac_ce") + "µF)", 495, 170);
-  }
-
-  ctx.beginPath(); ctx.moveTo(tx + 5, 78); ctx.lineTo(580, 78); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(580, 68); ctx.lineTo(580, 88); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(586, 68); ctx.lineTo(586, 88); ctx.stroke();
-  ctx.fillText("C2 (" + num("ac_c2") + "µF)", 570, 60);
-
-  ctx.beginPath(); ctx.moveTo(586, 78); ctx.lineTo(680, 78); ctx.lineTo(680, 220); ctx.stroke();
-  ctx.strokeRect(672, 110, 16, 28); ctx.fillText("RL (" + num("ac_rl") + "kΩ)", 695, 128);
-}
-
-function drawBode(p) {
-  var cv = document.getElementById("bodeCanvas");
-  var ctx = cv.getContext("2d");
-  var w = cv.width, h = cv.height;
-  ctx.clearRect(0, 0, w, h);
-
-  var padL = 60, padR = 60, padT = 30, padB = 40;
-  var graphW = w - padL - padR, graphH = h - padT - padB;
-  var decMin = 0, decMax = 9;
-
-  function getX(f) { return padL + ((Math.log10(Math.max(f, 1)) - decMin) / (decMax - decMin)) * graphW; }
-  function getYGain(g) { return padT + graphH - ((g - (-20)) / (60 - (-20))) * graphH; }
-
-  ctx.strokeStyle = "#e2e8f0"; ctx.lineWidth = 1;
-  for (var d = decMin; d <= decMax; d++) {
-    var x = padL + ((d - decMin) / (decMax - decMin)) * graphW;
-    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, h - padB); ctx.stroke();
-    ctx.fillStyle = "#64748b"; ctx.font = "10px Arial";
-    var label = (d < 3) ? Math.pow(10, d) + "Hz" : ((d < 6) ? Math.pow(10, d-3) + "kHz" : Math.pow(10, d-6) + "MHz");
-    ctx.fillText(label, x - 12, h - padB + 15);
-  }
-
-  for (var g = -20; g <= 60; g += 20) {
-    var y = getYGain(g);
-    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(w - padR, y); ctx.stroke();
-    ctx.fillStyle = "#1e3a8a"; ctx.fillText(g + " dB", 15, y + 4);
-  }
-
-  ctx.strokeStyle = "#dc2626"; ctx.setLineDash([4, 4]);
-  var x_fl = getX(p.fl), x_fh = getX(p.fh);
-  ctx.beginPath(); ctx.moveTo(x_fl, padT); ctx.lineTo(x_fl, h - padB); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(x_fh, padT); ctx.lineTo(x_fh, h - padB); ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle = "#dc2626"; ctx.font = "bold 11px Arial";
-  ctx.fillText("fL=" + p.fl.toFixed(0) + "Hz", x_fl + 5, padT + 15);
-  ctx.fillText("fH=" + (p.fh/1e6).toFixed(1) + "MHz", x_fh - 75, padT + 15);
-
-  ctx.strokeStyle = "#2563eb"; ctx.lineWidth = 2.5; ctx.beginPath();
-  var first = true;
-  for (var px = 0; px <= graphW; px += 2) {
-    var f = Math.pow(10, decMin + (px / graphW) * (decMax - decMin));
-    var g_total = Math.abs(p.av_sys) * (1 / Math.sqrt(1 + Math.pow(p.fl / f, 2))) * (1 / Math.sqrt(1 + Math.pow(f / p.fh, 2)));
-    var g_db = 20 * Math.log10(Math.max(g_total, 1e-4));
-    var y_g = getYGain(g_db);
-    if (first) { ctx.moveTo(padL + px, y_g); first = false; } else ctx.lineTo(padL + px, y_g);
-  }
-  ctx.stroke();
-}
-
-window.onload = function() { simDC(); };
-
-function drawLoadLine(canvasId, params) {
-        var canvas = document.getElementById(canvasId);
-        if (!canvas) return;
-        var ctx = canvas.getContext("2d");
-
-        var vcc = params.vcc || 12;                 
-        var rc = params.rc || 220;                  
-        var re = params.re || 47;                   
-        var vce_q = params.vce_q || 4.70;           
-        var ic_q_mA = params.ic_q_mA || 27.91;      
-
-        var vce_max = vcc;                          
-        var ic_sat_mA = (rc + re > 0) ? (vcc / (rc + re)) * 1000 : 0;   
-
-        var width = canvas.width;
-        var height = canvas.height;
-        var padding = { top: 30, right: 50, bottom: 40, left: 60 };
-
-        var graphW = width - padding.left - padding.right;
-        var graphH = height - padding.top - padding.bottom;
-
-        var xMax = Math.max(vce_max * 1.15, 10);
-        var yMax = Math.max(ic_sat_mA * 1.15, 10);
-
-        function toX(vce) { return padding.left + (vce / xMax) * graphW; }
-        function toY(ic) { return height - padding.bottom - (ic / yMax) * graphH; }
-
-        ctx.clearRect(0, 0, width, height);
-
-        // Axes
-        ctx.beginPath();
-        ctx.strokeStyle = "#333";
-        ctx.lineWidth = 1.5;
-        ctx.moveTo(padding.left, padding.top);
-        ctx.lineTo(padding.left, height - padding.bottom);
-        ctx.lineTo(width - padding.right, height - padding.bottom);
-        ctx.stroke();
-
-        // Titres des axes
-        ctx.fillStyle = "#333";
-        ctx.font = "bold 12px sans-serif";
-        ctx.fillText("VCE (V)", width - padding.right - 20, height - padding.bottom + 30);
-        ctx.fillText("IC (mA)", padding.left - 45, padding.top - 10);
-
-        // Droite de charge DC
-        var x1 = toX(0), y1 = toY(ic_sat_mA);
-        var x2 = toX(vce_max), y2 = toY(0);
-
-        ctx.beginPath();
-        ctx.strokeStyle = "#2563eb"; 
-        ctx.lineWidth = 2.5;
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-
-        // Point Saturation sur l'Axe Y
-        ctx.beginPath();
-        ctx.arc(x1, y1, 5, 0, 2 * Math.PI);
-        ctx.fillStyle = "#2563eb";
-        ctx.fill();
+    ctx.strokeStyle = "#10b981";
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1;
+    ctx.moveTo(qX1, qY1); ctx.lineTo(qX2, qY2);
+    ctx.lineTo(qX3, qY3); ctx.lineTo(qX4, qY4);
+    ctx.lineTo(qX1, qY1);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    function drawPointQ(px, py, text) {
+      ctx.beginPath();
+      ctx.arc(px, py, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = "#10b981";
+      ctx.fill();
+      if (text) {
         ctx.font = "bold 11px sans-serif";
-        ctx.fillText("Sat: " + ic_sat_mA.toFixed(1) + " mA", padding.left + 8, y1 + 4);
-
-        // Point Blocage sur l'Axe X
-        ctx.beginPath();
-        ctx.arc(x2, y2, 5, 0, 2 * Math.PI);
-        ctx.fillStyle = "#2563eb";
-        ctx.fill();
-        ctx.fillText("Blocage: " + vce_max.toFixed(1) + " V", x2 - 50, height - padding.bottom + 25);
-
-        // Pointilles Point Q
-        var qX = toX(vce_q);
-        var qY = toY(ic_q_mA);
-
-        ctx.beginPath();
-        ctx.strokeStyle = "#94a3b8"; 
-        ctx.setLineDash([4, 4]);
-        ctx.moveTo(qX, qY);
-        ctx.lineTo(qX, height - padding.bottom);
-        ctx.moveTo(qX, qY);
-        ctx.lineTo(padding.left, qY);
-        ctx.stroke();
-        ctx.setLineDash([]); 
-
-        // Point Q
-        ctx.beginPath();
-        ctx.arc(qX, qY, 6, 0, 2 * Math.PI);
-        ctx.fillStyle = "#10b981"; 
-        ctx.fill();
-        ctx.strokeStyle = "#047857";
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        // Texte Point Q
-        ctx.fillStyle = "#047857";
-        ctx.font = "bold 12px sans-serif";
-        ctx.fillText("Point Q (" + vce_q.toFixed(2) + "V, " + ic_q_mA.toFixed(2) + "mA)", qX + 10, qY - 10);
+        ctx.fillText(text, px + 8, py - 6);
       }
+    }
 
+    drawPointQ(qX1, qY1, "Point Q (" + q.vce.toFixed(2) + "V, " + q.ic.toFixed(2) + "mA)");
+    drawPointQ(qX2, qY2, null);
+    drawPointQ(qX3, qY3, null);
+  }
+
+  window.onload = function() {
+    simAll();
+  };
 </script>
+
 </body>
 </html>
